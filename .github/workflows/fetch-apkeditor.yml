@@ -20,7 +20,8 @@ jobs:
             https://github.com/REAndroid/APKEditor/releases/download/V1.4.9/APKEditor-1.4.9.jar \
             -o APKEditor-1.4.9.jar
           echo "a9cd40df818845456be6d696de6110c89edf4b0a0580cb83438ed6b25a366e67  APKEditor-1.4.9.jar" | sha256sum -c -
-          java -jar APKEditor-1.4.9.jar -h | tee APKEDITOR_HELP.txt
+          java -jar APKEditor-1.4.9.jar -h > APKEDITOR_HELP.txt 2>&1 || test $? -eq 2
+          grep -q 'Android binary resource files editor' APKEDITOR_HELP.txt
 
       - name: Upload tool
         uses: actions/upload-artifact@v4
