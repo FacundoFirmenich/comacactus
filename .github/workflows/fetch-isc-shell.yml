@@ -1,0 +1,36 @@
+name: Fetch auditable Android WebView shell
+
+on:
+  push:
+    branches:
+      - build/isc-webview-shell
+
+permissions:
+  contents: read
+
+jobs:
+  fetch-shell:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download Packora WebView shell template
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl -fL --retry 4 --retry-delay 2 \
+            https://raw.githubusercontent.com/Maheswara660/Packora/e9d76e748e4235aed17cb568911fc4307f260742/app/src/main/assets/template/webview_shell.apk \
+            -o webview_shell.apk
+          test -s webview_shell.apk
+          sha256sum webview_shell.apk | tee SHELL_SHA256.txt
+          unzip -l webview_shell.apk | tee SHELL_CONTENTS.txt
+          grep -q 'classes.dex' SHELL_CONTENTS.txt
+
+      - name: Upload generic shell only
+        uses: actions/upload-artifact@v4
+        with:
+          name: auditable-webview-shell
+          path: |
+            webview_shell.apk
+            SHELL_SHA256.txt
+            SHELL_CONTENTS.txt
+          if-no-files-found: error
+          retention-days: 1
