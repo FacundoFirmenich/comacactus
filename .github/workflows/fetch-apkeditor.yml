@@ -1,0 +1,33 @@
+name: Fetch APKEditor tool
+
+on:
+  push:
+    branches:
+      - build/isc-webview-shell
+
+permissions:
+  contents: read
+
+jobs:
+  fetch-tool:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download APKEditor 1.4.9
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl -fL --retry 4 --retry-delay 2 \
+            https://github.com/REAndroid/APKEditor/releases/download/V1.4.9/APKEditor-1.4.9.jar \
+            -o APKEditor-1.4.9.jar
+          echo "a9cd40df818845456be6d696de6110c89edf4b0a0580cb83438ed6b25a366e67  APKEditor-1.4.9.jar" | sha256sum -c -
+          java -jar APKEditor-1.4.9.jar -h | tee APKEDITOR_HELP.txt
+
+      - name: Upload tool
+        uses: actions/upload-artifact@v4
+        with:
+          name: apkeditor-1.4.9
+          path: |
+            APKEditor-1.4.9.jar
+            APKEDITOR_HELP.txt
+          if-no-files-found: error
+          retention-days: 1
