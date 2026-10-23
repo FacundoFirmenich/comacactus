@@ -1,0 +1,48 @@
+name: Export KCH read-only source
+
+on:
+  push:
+    branches:
+      - build/isc-webview-shell
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  export:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout helper branch
+        uses: actions/checkout@v4
+
+      - name: Checkout KCH read-only
+        uses: actions/checkout@v4
+        with:
+          repository: FacundoFirmenich/KCH
+          ref: 32a6312ed6bde84fd90d02df36301df43cf88274
+          path: KCH
+          fetch-depth: 1
+
+      - name: Verify and package
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git -C KCH rev-parse HEAD)" = "32a6312ed6bde84fd90d02df36301df43cf88274"
+          find KCH -type f | sort > KCH_FILE_LIST.txt
+          grep -Ei 'mcp|studio|preflight|permission' KCH_FILE_LIST.txt > KCH_BRIDGE_CANDIDATES.txt || true
+          tar --exclude='KCH/.git' -czf KCH-readonly-32a6312.tgz KCH
+          sha256sum KCH-readonly-32a6312.tgz > KCH-readonly-32a6312.tgz.sha256
+
+      - name: Upload source snapshot
+        uses: actions/upload-artifact@v4
+        with:
+          name: KCH-readonly-32a6312
+          path: |
+            KCH-readonly-32a6312.tgz
+            KCH-readonly-32a6312.tgz.sha256
+            KCH_FILE_LIST.txt
+            KCH_BRIDGE_CANDIDATES.txt
+          if-no-files-found: error
+          retention-days: 1
